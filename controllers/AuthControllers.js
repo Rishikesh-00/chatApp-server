@@ -1,7 +1,7 @@
 import jwt from "jsonwebtoken";
 import User from "../models/UserModel.js";
 import { compare } from "bcrypt";
-
+import {renameSync, unlinkSync} from 'fs';
 const maxAge=3*24*60*60*100;
 const createToken=(email,userId)=>{
     return jwt.sign({email,userId},process.env.JWT_KEY,{expiresIn:maxAge})
@@ -86,7 +86,6 @@ export const getUserInfo=async (req,res,next)=>{
 
 export const updateProfile=async (req,res,next)=>{
     try{
-        console.log("hello")
         const {userId}=req;
         const {firstName,lastName,color}=req.body;
         if(!firstName || !lastName || color===undefined ){
@@ -111,21 +110,18 @@ export const updateProfile=async (req,res,next)=>{
 
 
 export const addProfileImage=async (req,res,next)=>{
+    console.log("add profile")
     try{
         if(!req.file){
             return res.status(400).send("file is required")
         }
         const date=Date.now();
-        let fielName="uploads/profiles"
-    //     return res.status(200).json({
-    //         id:userData.id,
-    //         email:userData.email,
-    //         profileSetup:userData.profileSetup,
-    //         firstName:userData.firstName,
-    //         lastName:userData.lastName,
-    //         image:userData.image,
-    //         color:userData.color,
-    // })
+        let fileName="uploads/profiles/" + date + req.file.originalname;
+        renameSync(req.file.path,fileName);
+        const updatedUser=await User.findByIdAndUpdate(req.userId,{image:fileName},{new:true,runValidators:true})
+        return res.status(200).json({
+            image:updatedUser.image,
+    })
     }catch(err){
         console.log({err})
         return res.status(500).send("Internal server error");
@@ -135,7 +131,6 @@ export const addProfileImage=async (req,res,next)=>{
 
 export const removeProfileImage=async (req,res,next)=>{
     try{
-        console.log("hello")
         const {userId}=req;
         const {firstName,lastName,color}=req.body;
         if(!firstName || !lastName || color===undefined ){
