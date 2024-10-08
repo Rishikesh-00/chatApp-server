@@ -131,6 +131,7 @@ export const addProfileImage=async (req,res,next)=>{
 
 
 export const removeProfileImage=async (req,res,next)=>{
+    
     try{
         const {userId}=req;
         const user=await User.findById(userId);
@@ -142,8 +143,6 @@ export const removeProfileImage=async (req,res,next)=>{
         }
         user.image=null;
         await user.save()
-       
-        
         return res.status(200).send("Profile image removed successfully")
     }catch(err){
         console.log({err})
